@@ -179,7 +179,14 @@ graph LR
         
         REV[💰 Revenue Estimator<br/>━━━━━━━━━━━━━<br/>• Runs what-if scenarios<br/>• Calculates revenue impact<br/>• Optimizes load factors]
         
+        REV_SUB1[📊 What-If Scenario Analyzer<br/>• Simulates allocation strategies<br/>• Compares revenue outcomes]
+        
+        REV_SUB2[📈 Load Factor Optimizer<br/>• Predicts capacity utilization<br/>• Balances revenue vs fill rate]
+        
         BCO[📋 Binding Generator<br/>━━━━━━━━━━━━━<br/>• Creates allocation conditions<br/>• Validates constraints<br/>• Determines rate bands]
+        
+        REV --> REV_SUB1
+        REV --> REV_SUB2
     end
     
     USER[👤 Capacity Controller]
@@ -204,6 +211,8 @@ graph LR
     style OFI fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
     style BPE fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
     style REV fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
+    style REV_SUB1 fill:#A8E6CF,stroke:#4ECDC4,stroke-width:1px
+    style REV_SUB2 fill:#A8E6CF,stroke:#4ECDC4,stroke-width:1px
     style BCO fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
     style USER fill:#95E1D3,stroke:#38A169,stroke-width:2px
     style PLAN fill:#FFE66D,stroke:#F59E0B,stroke-width:2px
