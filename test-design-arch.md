@@ -261,63 +261,75 @@ sequenceDiagram
 
 ### Deployment Architecture
 
-```mermaid
-graph TB
-    subgraph "Local Development Environment"
-        DEV["💻 Developer Workstation<br/>━━━━━━━━━━━━━<br/>React + TypeScript Frontend<br/>Vite Dev Server<br/>Port: 5173"]
-    end
-    
-    subgraph "AWS Cloud - us-east-1"
-        
-        subgraph "Code Deployment"
-            S3_CODE["📦 Amazon S3<br/>━━━━━━━━━━━━━<br/>Agent Code Storage<br/>Python Packages<br/>Direct Deployment"]
-        end
-        
-        subgraph "AWS Bedrock - AgentCore Runtime"
-            AGENTCORE["🤖 Bedrock AgentCore Runtime<br/>━━━━━━━━━━━━━<br/>5-Agent Orchestration System<br/>FastAPI Backend<br/>Strands SDK"]
-            
-            AGENTS["Multi-Agent System<br/>━━━━━━━━━━━━━<br/>• Coordinator Agent<br/>• Flight Finder Agent<br/>• Backlog Prioritizer Agent<br/>• Revenue Estimator Agent<br/>• Binding Generator Agent"]
-            
-            MEMORY["🧠 AgentCore Memory<br/>━━━━━━━━━━━━━<br/>Conversation State<br/>Execution Context<br/>Agent History"]
-            
-            AGENTCORE --> AGENTS
-            AGENTCORE --> MEMORY
-        end
-        
-        subgraph "AI/ML Services"
-            BEDROCK["🧠 Bedrock Foundation Models<br/>━━━━━━━━━━━━━<br/>Claude 3.5 Sonnet<br/>Function Calling<br/>200K Context Window"]
-            
-            KB["📚 Bedrock Knowledge Base<br/>━━━━━━━━━━━━━<br/>RAG Implementation<br/>86 Mock Data Records<br/>Semantic Search"]
-        end
-        
-        subgraph "Data Storage"
-            S3_DATA["📦 S3 - Knowledge Base<br/>━━━━━━━━━━━━━<br/>Flight Data (8)<br/>Shipments (19)<br/>Customers (13)<br/>Bindings (18)<br/>Revenue Models (28)"]
-            
-            VECTOR["🔍 Vector Embeddings<br/>━━━━━━━━━━━━━<br/>Semantic Search Index<br/>OpenSearch Serverless"]
-        end
-        
-        S3_CODE -->|Deploy Code| AGENTCORE
-        
-        AGENTCORE -->|Invoke| BEDROCK
-        AGENTCORE -->|Query| KB
-        
-        KB --> S3_DATA
-        KB --> VECTOR
-    end
-    
-    DEV -->|HTTPS API Calls| AGENTCORE
-    DEV -->|SSE Streaming| AGENTCORE
-    
-    style DEV fill:#E8F5E9,stroke:#4CAF50,stroke-width:3px
-    style S3_CODE fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style AGENTCORE fill:#FF6B6B,stroke:#C92A2A,stroke-width:4px,color:#fff
-    style AGENTS fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
-    style MEMORY fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
-    style BEDROCK fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style KB fill:#FFA500,stroke:#FF8C00,stroke-width:3px
-    style S3_DATA fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style VECTOR fill:#FF9800,stroke:#E65100,stroke-width:2px
-```
+**Architecture Diagram:**
+
+![Cargo Allocation Architecture](ai-agent-new.png)
+
+*Full interactive diagram: [ai-agent-new.drawio](ai-agent-new.drawio) | [Open in diagrams.net](https://app.diagrams.net/#Uhttps%3A%2F%2Fraw.githubusercontent.com%2F<YOUR-USERNAME>%2F<YOUR-REPO>%2Fmain%2Fai-agent-new.drawio)*
+
+#### Architecture Overview
+
+The system follows a serverless, cloud-native architecture deployed on **AWS us-east-1 region**, integrating local development with production-grade AWS Bedrock services.
+
+#### 1. Local Development Environment
+- **User Interface**: Capacity Controller interacts through a local React + TypeScript frontend
+- **API Server**: FastAPI server running locally (port 5173 via Vite)
+- **Chat Interface**: Real-time chat panel with agent monitoring and analytics dashboard
+- **Development Experience**: Fast iteration with hot-reload and immediate feedback
+
+#### 2. Deployment Pipeline
+- **Code Storage**: Amazon S3 buckets store agent code and Python packages
+- **Deployment Method**: Direct S3-to-AgentCore deployment (no Docker containers or ECS)
+- **Simplicity**: Lightweight deployment without container orchestration overhead
+
+#### 3. Amazon Bedrock AgentCore Runtime
+- **AgentCore Runtime**: Central orchestration engine managing all 5 agents
+- **AgentCore Memory**: Persistent conversation state and execution context across interactions
+- **AgentCore Observability**: Built-in monitoring, metrics, and tracing capabilities
+- **Framework**: Powered by AWS Strands SDK with FastAPI backend
+
+#### 4. Multi-Agent Orchestration (Agents-as-Tools Pattern)
+- **🎯 Coordinator Agent**: Primary orchestrator for workflow management and decision synthesis
+- **🛫 Flight Finder (OFI)**: Identifies opportunity flights with available capacity
+- **📊 Backlog Prioritizer (BPE)**: Ranks shipments by criticality and SLA urgency
+- **💰 Revenue Estimator (REV)**: Runs what-if scenarios and revenue forecasting
+- **📋 Binding Generator (BCO)**: Creates allocation conditions and validates constraints
+
+#### 5. Agent Tools (9 Functions)
+Each specialist agent has dedicated tools:
+- **Flight Tools**: `get_opportunity_flights`, `calculate_load_factor`
+- **Backlog Tools**: `get_backlog_shipments`, `calculate_criticality`, `rank_shipments`
+- **Revenue Tools**: `calculate_revenue_impact`, `estimate_load_factor`, `compare_scenarios`
+- **Binding Tools**: `generate_binding_conditions`, `validate_conditions`, `get_rate_band`
+
+#### 6. AI/ML Services
+- **Amazon Bedrock Foundation Models**: Claude 3.5 Sonnet with 200K context window and function calling
+- **Amazon Bedrock Knowledge Bases**: RAG implementation with 86 mock data records for semantic search
+
+#### 7. Knowledge Base & Data Layer
+- **Bedrock Knowledge Base**: Central RAG system for intelligent data retrieval
+- **Amazon OpenSearch Serverless**: Vector embeddings for semantic search indexing
+- **Amazon S3 (KB Source)**: Raw data files for knowledge base (flights, shipments, customers, bindings, revenue models)
+
+#### 8. Observability & Monitoring
+- **Amazon CloudWatch**: Centralized logging, metrics, and alarms
+- **AWS X-Ray**: Distributed tracing for request flow analysis
+- **AgentCore Observability**: Native agent execution monitoring and performance tracking
+
+#### 9. Execution Modes
+The system supports three execution modes:
+- **🟢 Mock Mode**: Scripted demo with predefined responses for testing
+- **🔵 Dev Mode**: Local Strands SDK execution for development
+- **🟠 AgentCore Mode**: Production cloud runtime on AWS Bedrock
+
+#### Data Flow
+1. User query → FastAPI → AgentCore Runtime (HTTPS + SSE streaming)
+2. Runtime invokes Coordinator Agent
+3. Coordinator dispatches specialist agents sequentially (Flight Finder → Backlog Prioritizer → Revenue Estimator → Binding Generator)
+4. Each agent calls tools → tools query Knowledge Base (RAG with semantic search)
+5. Consolidated allocation plan streamed back to UI via Server-Sent Events (SSE)
+
+**Total Process Time**: 30-60 seconds end-to-end
 
 ### Architecture Components
 
