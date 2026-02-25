@@ -263,7 +263,7 @@ sequenceDiagram
 
 **Architecture Diagram:**
 
-![Cargo Allocation Architecture](ai-agent-new.png)
+![Cargo Allocation Architecture](ai-agent-new.drawio.png)
 
 *Full interactive diagram: [ai-agent-new.drawio](ai-agent-new.drawio) | [Open in diagrams.net](https://app.diagrams.net/#Uhttps%3A%2F%2Fraw.githubusercontent.com%2F<YOUR-USERNAME>%2F<YOUR-REPO>%2Fmain%2Fai-agent-new.drawio)*
 
