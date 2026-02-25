@@ -11,8 +11,7 @@
 4. [Data Flow & Orchestration](#data-flow--orchestration)
 5. [Technical Stack](#technical-stack)
 6. [Knowledge Base Architecture](#knowledge-base-architecture)
-7. [API & Integration Layer](#api--integration-layer)
-8. [Product Features & Value Proposition](#product-features--value-proposition)
+7. [Product Features & Value Proposition](#product-features--value-proposition)
 
 ---
 
@@ -313,264 +312,153 @@ sequenceDiagram
 
 ---
 
-## Technical Stack - AWS Architecture
+## Technical Stack & AWS Architecture
+
+### Deployment Architecture
 
 ```mermaid
 graph TB
-    subgraph "User Layer"
-        USER[👤 Capacity Controllers<br/>& Operations Team]
+    subgraph "Local Development Environment"
+        DEV["💻 Developer Workstation<br/>━━━━━━━━━━━━━<br/>React + TypeScript Frontend<br/>Vite Dev Server<br/>Port: 5173"]
     end
     
-    subgraph "AWS Cloud - us-east-1 Region"
+    subgraph "AWS Cloud - us-east-1"
         
-        subgraph "Frontend Tier"
-            direction LR
-            S3_WEB["☁️ Amazon S3<br/>Static Website Hosting<br/>━━━━━━━━━━━━━<br/>React + TypeScript<br/>Vite Build"]
-            CF["🌐 CloudFront CDN<br/>Global Distribution<br/>━━━━━━━━━━━━━<br/>HTTPS/SSL<br/>Edge Caching"]
-            
-            CF --> S3_WEB
+        subgraph "Code Deployment"
+            S3_CODE["📦 Amazon S3<br/>━━━━━━━━━━━━━<br/>Agent Code Storage<br/>Python Packages<br/>Direct Deployment"]
         end
         
-        subgraph "API & Compute Tier"
-            direction TB
-            ALB["⚖️ Application Load Balancer<br/>━━━━━━━━━━━━━<br/>HTTPS Termination<br/>Health Checks"]
+        subgraph "AWS Bedrock - AgentCore Runtime"
+            AGENTCORE["🤖 Bedrock AgentCore Runtime<br/>━━━━━━━━━━━━━<br/>5-Agent Orchestration System<br/>FastAPI Backend<br/>Strands SDK"]
             
-            ECS["🐳 Amazon ECS Fargate<br/>━━━━━━━━━━━━━<br/>FastAPI Application<br/>Python 3.11<br/>Strands SDK<br/>Auto-scaling: 2-10 tasks"]
+            AGENTS["Multi-Agent System<br/>━━━━━━━━━━━━━<br/>• Coordinator Agent<br/>• Flight Finder Agent<br/>• Backlog Prioritizer Agent<br/>• Revenue Estimator Agent<br/>• Binding Generator Agent"]
             
-            ALB --> ECS
+            MEMORY["🧠 AgentCore Memory<br/>━━━━━━━━━━━━━<br/>Conversation State<br/>Execution Context<br/>Agent History"]
+            
+            AGENTCORE --> AGENTS
+            AGENTCORE --> MEMORY
         end
         
-        subgraph "AWS Bedrock Services"
-            direction TB
+        subgraph "AI/ML Services"
+            BEDROCK["🧠 Bedrock Foundation Models<br/>━━━━━━━━━━━━━<br/>Claude 3.5 Sonnet<br/>Function Calling<br/>200K Context Window"]
             
-            AGENTCORE["🤖 Bedrock AgentCore Runtime<br/>━━━━━━━━━━━━━<br/>Multi-Agent Orchestration<br/>5 Agents Deployed<br/>ARN: arn:aws:bedrock:us-east-1"]
-            
-            BEDROCK_FM["🧠 Bedrock Foundation Models<br/>━━━━━━━━━━━━━<br/>Claude 3.5 Sonnet<br/>Function Calling Enabled<br/>Streaming Support"]
-            
-            BEDROCK_KB["📚 Bedrock Knowledge Base<br/>━━━━━━━━━━━━━<br/>RAG Implementation<br/>86 Records Indexed<br/>Semantic Search"]
-            
-            AGENTCORE --> BEDROCK_FM
-            AGENTCORE --> BEDROCK_KB
+            KB["📚 Bedrock Knowledge Base<br/>━━━━━━━━━━━━━<br/>RAG Implementation<br/>86 Mock Data Records<br/>Semantic Search"]
         end
         
-        subgraph "Data & Storage Layer"
-            direction LR
+        subgraph "Data Storage"
+            S3_DATA["📦 S3 - Knowledge Base<br/>━━━━━━━━━━━━━<br/>Flight Data (8)<br/>Shipments (19)<br/>Customers (13)<br/>Bindings (18)<br/>Revenue Models (28)"]
             
-            S3_DATA["📦 Amazon S3<br/>Data Storage<br/>━━━━━━━━━━━━━<br/>Knowledge Base Files<br/>Versioning Enabled"]
-            
-            OSS["🔍 OpenSearch Serverless<br/>Vector Database<br/>━━━━━━━━━━━━━<br/>Embeddings Storage<br/>Semantic Search Index"]
-            
-            BEDROCK_KB --> S3_DATA
-            BEDROCK_KB --> OSS
+            VECTOR["🔍 Vector Embeddings<br/>━━━━━━━━━━━━━<br/>Semantic Search Index<br/>OpenSearch Serverless"]
         end
         
-        subgraph "Monitoring & Security"
-            direction TB
-            
-            CW["📊 CloudWatch<br/>━━━━━━━━━━━━━<br/>Logs & Metrics<br/>Alarms & Dashboards"]
-            
-            IAM["🔐 IAM Roles & Policies<br/>━━━━━━━━━━━━━<br/>ECS Task Role<br/>Bedrock Access<br/>S3 Permissions"]
-            
-            SECRETS["🔑 Secrets Manager<br/>━━━━━━━━━━━━━<br/>API Keys<br/>Configuration"]
-        end
+        S3_CODE -->|Deploy Code| AGENTCORE
         
-        subgraph "CI/CD Pipeline"
-            direction LR
-            
-            GH["🐙 GitHub Actions<br/>━━━━━━━━━━━━━<br/>Automated Deployment<br/>Testing Pipeline"]
-            
-            ECR["📦 Amazon ECR<br/>━━━━━━━━━━━━━<br/>Container Registry<br/>Image Storage"]
-            
-            GH --> ECR
-            ECR --> ECS
-        end
+        AGENTCORE -->|Invoke| BEDROCK
+        AGENTCORE -->|Query| KB
         
+        KB --> S3_DATA
+        KB --> VECTOR
     end
     
-    USER -->|HTTPS| CF
-    CF -->|API Requests| ALB
-    ECS -->|Invoke Agents| AGENTCORE
-    ECS -->|Stream Events| USER
+    DEV -->|HTTPS API Calls| AGENTCORE
+    DEV -->|SSE Streaming| AGENTCORE
     
-    ECS -.->|Logs| CW
-    AGENTCORE -.->|Logs| CW
-    ECS -.->|Assumes| IAM
-    AGENTCORE -.->|Assumes| IAM
-    ECS -.->|Secrets| SECRETS
-    
-    style USER fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
-    style CF fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style S3_WEB fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style ALB fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style ECS fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style AGENTCORE fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff
-    style BEDROCK_FM fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style BEDROCK_KB fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style DEV fill:#E8F5E9,stroke:#4CAF50,stroke-width:3px
+    style S3_CODE fill:#FF9800,stroke:#E65100,stroke-width:2px
+    style AGENTCORE fill:#FF6B6B,stroke:#C92A2A,stroke-width:4px,color:#fff
+    style AGENTS fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
+    style MEMORY fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    style BEDROCK fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    style KB fill:#FFA500,stroke:#FF8C00,stroke-width:3px
     style S3_DATA fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style OSS fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style CW fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style IAM fill:#DD2C00,stroke:#BF360C,stroke-width:2px
-    style SECRETS fill:#DD2C00,stroke:#BF360C,stroke-width:2px
-    style GH fill:#24292e,stroke:#000,stroke-width:2px
-    style ECR fill:#FF9800,stroke:#E65100,stroke-width:2px
+    style VECTOR fill:#FF9800,stroke:#E65100,stroke-width:2px
 ```
 
-### AWS Services Breakdown
+### Architecture Components
+
+| Component | Technology | Purpose | Details |
+|-----------|-----------|---------|---------|
+| **Frontend** | React 18 + TypeScript + Vite | Local development UI | Running on localhost:5173 |
+| **Backend Runtime** | AWS Bedrock AgentCore | Multi-agent orchestration | 5 agents deployed, serverless execution |
+| **Agent Framework** | AWS Strands SDK | Agent implementation | Python-based, function calling enabled |
+| **Foundation Model** | Claude 3.5 Sonnet | Natural language AI | 200K context, streaming support |
+| **Knowledge Base** | Bedrock KB + RAG | Mock data storage | 86 records across 5 categories |
+| **Memory** | AgentCore Memory | Conversation state | Persistent context across interactions |
+| **Code Deployment** | S3 Direct Deploy | Agent code storage | No Docker/ECS, direct S3 to AgentCore |
+| **Vector Store** | OpenSearch Serverless | Semantic search | Embeddings for KB retrieval |
+| **Data Storage** | S3 Buckets | Raw data files | JSON/TXT format, versioned |
+
+### Data Flow
 
 ```mermaid
-graph LR
-    subgraph "Presentation Layer"
-        P1["React 18 + TypeScript<br/>shadcn/ui + Tailwind<br/>TanStack Query"]
-        P2["Vite Build System<br/>Hot Module Reload<br/>Production Optimization"]
-    end
+sequenceDiagram
+    participant Dev as 💻 Local Frontend
+    participant AC as 🤖 AgentCore Runtime
+    participant Agents as 🔧 Multi-Agent System
+    participant Memory as 🧠 Memory Store
+    participant Claude as 🧠 Claude 3.5
+    participant KB as 📚 Knowledge Base
     
-    subgraph "Application Layer"
-        A1["FastAPI Framework<br/>Async/Await<br/>OpenAPI Docs"]
-        A2["AWS Strands SDK<br/>Agent Orchestration<br/>Bedrock Integration"]
-        A3["Boto3 SDK<br/>AWS Service APIs<br/>Resource Management"]
-    end
+    Dev->>AC: POST /optimize<br/>{query: "Allocate backlog"}
+    AC->>Memory: Load conversation context
+    AC->>Agents: Initialize coordinator
     
-    subgraph "AI/ML Layer"
-        AI1["Bedrock AgentCore<br/>5-Agent System<br/>Coordinator Pattern"]
-        AI2["Claude 3.5 Sonnet<br/>Function Calling<br/>Context Window: 200K"]
-        AI3["Knowledge Base<br/>RAG Pipeline<br/>86 Records"]
-    end
+    Agents->>KB: Query flight data
+    KB-->>Agents: 8 opportunity flights
     
-    subgraph "Infrastructure Layer"
-        I1["ECS Fargate<br/>Serverless Containers<br/>Auto-scaling"]
-        I2["Application Load Balancer<br/>SSL/TLS Termination<br/>Health Monitoring"]
-        I3["CloudFront + S3<br/>Global CDN<br/>Static Assets"]
-    end
+    Agents->>KB: Query shipment data  
+    KB-->>Agents: 19 backlog shipments
     
-    subgraph "Data Layer"
-        D1["S3 Buckets<br/>Object Storage<br/>Versioning"]
-        D2["OpenSearch Serverless<br/>Vector Search<br/>Embeddings"]
-    end
+    Agents->>Claude: Generate allocation plan<br/>with function calling
+    Claude-->>Agents: Optimized recommendations
     
-    subgraph "Security & Governance"
-        S1["IAM Roles/Policies<br/>Least Privilege<br/>Service Principals"]
-        S2["CloudWatch<br/>Logging & Monitoring<br/>Alarms"]
-        S3["Secrets Manager<br/>Credential Rotation<br/>Encryption at Rest"]
-    end
+    Agents->>Memory: Save execution state
+    Agents->>AC: Return allocation plan
+    AC->>Dev: Stream results via SSE
     
-    P1 --> A1
-    P2 --> I3
-    A1 --> A2
-    A2 --> A3
-    A2 --> AI1
-    AI1 --> AI2
-    AI1 --> AI3
-    AI3 --> D1
-    AI3 --> D2
-    A1 --> I1
-    I1 --> I2
-    I2 --> I3
-    
-    I1 -.->|Secured by| S1
-    AI1 -.->|Secured by| S1
-    I1 -.->|Monitored by| S2
-    AI1 -.->|Monitored by| S2
-    A1 -.->|Credentials| S3
-    
-    style AI1 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style AI2 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style AI3 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
+    Note over Dev,KB: Total time: 30-60 seconds
 ```
 
-### AWS Architecture Components
+### Technology Stack Summary
 
-| Layer | AWS Service | Purpose | Configuration |
-|-------|-------------|---------|---------------|
-| **CDN & Delivery** | CloudFront | Global content delivery, HTTPS termination | Edge locations worldwide |
-| **Frontend Hosting** | S3 (Static Website) | React application hosting | Versioning enabled, lifecycle policies |
-| **Load Balancing** | Application Load Balancer | Traffic distribution, SSL/TLS | Health checks, auto-scaling integration |
-| **Compute** | ECS Fargate | Serverless container orchestration | 2-10 tasks, 2 vCPU, 4GB RAM per task |
-| **Container Registry** | ECR | Docker image storage | Scan on push, lifecycle policies |
-| **AI Orchestration** | Bedrock AgentCore Runtime | Multi-agent coordination | 5 agents deployed, streaming enabled |
-| **Foundation Model** | Bedrock Claude 3.5 Sonnet | Natural language processing | 200K context, function calling |
-| **Knowledge Base** | Bedrock Knowledge Base | RAG implementation | 86 records, semantic search |
-| **Vector Store** | OpenSearch Serverless | Embeddings storage | Auto-scaling, AES-256 encryption |
-| **Object Storage** | S3 (Data) | Knowledge base files | Server-side encryption, versioning |
-| **Monitoring** | CloudWatch | Logs, metrics, alarms | Custom dashboards, 30-day retention |
-| **Security** | IAM Roles & Policies | Access control | Least privilege, service principals |
-| **Secrets** | Secrets Manager | Credential management | Auto-rotation, encryption at rest |
-| **CI/CD** | GitHub Actions | Automated deployment | Infrastructure as code |
+**Frontend Layer:**
+- React 18 with TypeScript
+- shadcn/ui components + Tailwind CSS
+- TanStack Query for state management
+- Vite for development server
 
-### Scalability & Performance
+**Backend Layer:**
+- AWS Bedrock AgentCore Runtime
+- Python 3.11 + FastAPI
+- AWS Strands SDK for agent orchestration
+- Boto3 for AWS service integration
 
-```mermaid
-graph TB
-    subgraph "Auto-Scaling Configuration"
-        AS1["ECS Service Auto-Scaling<br/>Min: 2 tasks<br/>Max: 10 tasks<br/>Target: 70% CPU"]
-        AS2["CloudFront Edge Caching<br/>TTL: 24 hours<br/>Origin failover enabled"]
-        AS3["Bedrock AgentCore<br/>Managed scaling<br/>Concurrent executions"]
-    end
-    
-    subgraph "High Availability"
-        HA1["Multi-AZ Deployment<br/>3 Availability Zones<br/>Automatic failover"]
-        HA2["Health Checks<br/>ALB health checks<br/>ECS health monitoring"]
-        HA3["Data Redundancy<br/>S3 cross-region replication<br/>OpenSearch replicas"]
-    end
-    
-    subgraph "Performance Optimization"
-        P1["Response Time: <60s<br/>Average: 35s<br/>P99: 55s"]
-        P2["API Throughput<br/>1000 req/sec<br/>Burst: 2000 req/sec"]
-        P3["Agent Processing<br/>Parallel execution<br/>Batch optimization"]
-    end
-    
-    style AS1 fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
-    style AS2 fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
-    style AS3 fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
-    style HA1 fill:#95E1D3,stroke:#38A169,stroke-width:2px
-    style HA2 fill:#95E1D3,stroke:#38A169,stroke-width:2px
-    style HA3 fill:#95E1D3,stroke:#38A169,stroke-width:2px
-    style P1 fill:#FFE66D,stroke:#F59E0B,stroke-width:2px
-    style P2 fill:#FFE66D,stroke:#F59E0B,stroke-width:2px
-    style P3 fill:#FFE66D,stroke:#F59E0B,stroke-width:2px
-```
+**AI/ML Layer:**
+- Claude 3.5 Sonnet (Bedrock Foundation Model)
+- 5-agent coordinator pattern
+- Function calling for tool execution
+- AgentCore Memory for state persistence
 
-### Security Architecture
+**Data Layer:**
+- Bedrock Knowledge Base (RAG)
+- S3 for data storage
+- OpenSearch Serverless for vector search
+- 86 mock records (flights, shipments, customers, bindings, revenue)
 
-```mermaid
-graph TB
-    subgraph "Defense in Depth"
-        D1["🔒 Network Security<br/>VPC with private subnets<br/>Security groups<br/>NACLs"]
-        D2["🔐 Identity & Access<br/>IAM roles with MFA<br/>Least privilege policies<br/>Service principals"]
-        D3["🔑 Data Encryption<br/>In-transit: TLS 1.3<br/>At-rest: AES-256<br/>Key rotation"]
-        D4["👁️ Monitoring & Audit<br/>CloudTrail logs<br/>GuardDuty threats<br/>Config compliance"]
-    end
-    
-    subgraph "Compliance & Governance"
-        C1["📋 AWS Well-Architected<br/>Security pillar<br/>Operational excellence<br/>Cost optimization"]
-        C2["🛡️ Data Protection<br/>Backup policies<br/>Disaster recovery<br/>Point-in-time recovery"]
-    end
-    
-    D1 --> C1
-    D2 --> C1
-    D3 --> C2
-    D4 --> C1
-    
-    style D1 fill:#DD2C00,stroke:#BF360C,stroke-width:2px,color:#fff
-    style D2 fill:#DD2C00,stroke:#BF360C,stroke-width:2px,color:#fff
-    style D3 fill:#DD2C00,stroke:#BF360C,stroke-width:2px,color:#fff
-    style D4 fill:#DD2C00,stroke:#BF360C,stroke-width:2px,color:#fff
-    style C1 fill:#4CAF50,stroke:#2E7D32,stroke-width:2px
-    style C2 fill:#4CAF50,stroke:#2E7D32,stroke-width:2px
-```
+**Deployment:**
+- Direct S3 code deployment to AgentCore
+- No containerization (Docker/ECS)
+- Serverless, fully managed runtime
+- Auto-scaling and monitoring built-in
 
-### Cost Optimization Strategy
+### Key Features
 
-| Service | Estimated Monthly Cost | Optimization |
-|---------|----------------------|--------------|
-| **ECS Fargate** | $150-300 | Auto-scaling, spot capacity |
-| **Bedrock (Claude)** | $200-500 | Prompt optimization, caching |
-| **Bedrock KB** | $50-100 | Efficient indexing, chunking |
-| **S3 Storage** | $20-50 | Lifecycle policies, compression |
-| **CloudFront** | $50-100 | Edge caching, compression |
-| **ALB** | $30-50 | Single ALB, efficient routing |
-| **OpenSearch** | $100-200 | Serverless, auto-scaling |
-| **CloudWatch** | $20-40 | Log retention policies |
-| **Total** | **$620-1,340/month** | Reserved capacity available |
+✅ **Serverless Architecture** - No infrastructure management required  
+✅ **Direct Deployment** - S3 to AgentCore, no container overhead  
+✅ **Built-in Memory** - AgentCore Memory for conversation persistence  
+✅ **Managed Scaling** - Automatic scaling based on demand  
+✅ **Cost Efficient** - Pay only for execution time  
+✅ **Local Development** - Frontend runs locally for fast iteration
 
 ---
 
@@ -672,74 +560,6 @@ graph TB
 - ✅ Happy path, negative cases, and edge cases included
 - ✅ Semantic search with source attribution
 - ✅ Structured JSON format for tool consumption
-
----
-
-## API & Integration Layer
-
-```mermaid
-graph LR
-    subgraph "REST API Endpoints"
-        E1[POST /optimize<br/>Main optimization]
-        E2[POST /optimize/stream<br/>SSE streaming]
-        E3[GET /agents<br/>Agent status]
-        E4[GET /flights<br/>Opportunity flights]
-        E5[GET /backlog<br/>Backlog shipments]
-        E6[GET /health<br/>Health check]
-        E7[POST /mode<br/>Set execution mode]
-        E8[GET /prompts<br/>Agent prompts]
-    end
-    
-    subgraph "Execution Modes"
-        MODE1[🎭 Mock Mode<br/>Simulated responses]
-        MODE2[💻 Dev Mode<br/>Local Strands agents]
-        MODE3[☁️ AgentCore Mode<br/>AWS runtime]
-    end
-    
-    subgraph "Response Types"
-        R1[JSON Response<br/>Structured data]
-        R2[SSE Stream<br/>Real-time events]
-        R3[Error Handling<br/>Graceful degradation]
-    end
-    
-    E1 --> MODE1
-    E1 --> MODE2
-    E1 --> MODE3
-    
-    E2 --> R2
-    E1 --> R1
-    E6 --> R1
-    
-    E1 -.fallback.-> R3
-    E2 -.fallback.-> R3
-    
-    style E1 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style E2 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style MODE2 fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
-    style MODE3 fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
-```
-
-### API Specifications
-
-**Base URL:** `http://localhost:8000` (dev) / `https://api.ilogistics.ai` (production)
-
-**Authentication:** Bearer token (future enhancement)
-
-**Key Endpoints:**
-
-1. **POST /optimize** - Main optimization endpoint
-   - Input: `{query: string, time_window_hours: number}`
-   - Output: Allocation plan with recommendations
-
-2. **POST /optimize/stream** - Server-Sent Events streaming
-   - Real-time agent status updates
-   - Progress tracking
-   - Event types: `agent_start`, `agent_complete`, `tool_call`, `final_response`
-
-3. **GET /agents** - Agent system status
-   - Returns: All 5 agents with current status
-   - LLM availability check
-   - Configuration details
 
 ---
 
