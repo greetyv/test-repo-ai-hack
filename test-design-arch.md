@@ -1,7 +1,5 @@
 # Cargo Opportunity Allocation - Design & Architecture Documentation
 
-> **Hackathon Presentation: Analysis and Design [Tech and Product Evaluation] - 35%**
-
 ---
 
 ## 📋 Table of Contents
@@ -265,21 +263,19 @@ sequenceDiagram
 
 ![Cargo Allocation Architecture](ai-agent-new.drawio.png)
 
-*Full interactive diagram: [ai-agent-new.drawio](ai-agent-new.drawio) | [Open in diagrams.net](https://app.diagrams.net/#Uhttps%3A%2F%2Fraw.githubusercontent.com%2F<YOUR-USERNAME>%2F<YOUR-REPO>%2Fmain%2Fai-agent-new.drawio)*
-
 #### Architecture Overview
 
 The system follows a serverless, cloud-native architecture deployed on **AWS us-east-1 region**, integrating local development with production-grade AWS Bedrock services.
 
 #### 1. Local Development Environment
 - **User Interface**: Capacity Controller interacts through a local React + TypeScript frontend
-- **API Server**: FastAPI server running locally (port 5173 via Vite)
+- **API Server**: FastAPI server running locally
 - **Chat Interface**: Real-time chat panel with agent monitoring and analytics dashboard
 - **Development Experience**: Fast iteration with hot-reload and immediate feedback
 
 #### 2. Deployment Pipeline
 - **Code Storage**: Amazon S3 buckets store agent code and Python packages
-- **Deployment Method**: Direct S3-to-AgentCore deployment (no Docker containers or ECS)
+- **Deployment Method**: Direct S3-to-AgentCore deployment
 - **Simplicity**: Lightweight deployment without container orchestration overhead
 
 #### 3. Amazon Bedrock AgentCore Runtime
@@ -329,19 +325,17 @@ The system supports three execution modes:
 4. Each agent calls tools → tools query Knowledge Base (RAG with semantic search)
 5. Consolidated allocation plan streamed back to UI via Server-Sent Events (SSE)
 
-**Total Process Time**: 30-60 seconds end-to-end
-
 ### Architecture Components
 
 | Component | Technology | Purpose | Details |
 |-----------|-----------|---------|---------|
-| **Frontend** | React 18 + TypeScript + Vite | Local development UI | Running on localhost:5173 |
+| **Frontend** | React 18 + TypeScript + Vite | Local development UI | Running locally |
 | **Backend Runtime** | AWS Bedrock AgentCore | Multi-agent orchestration | 5 agents deployed, serverless execution |
 | **Agent Framework** | AWS Strands SDK | Agent implementation | Python-based, function calling enabled |
 | **Foundation Model** | Claude 3.5 Sonnet | Natural language AI | 200K context, streaming support |
 | **Knowledge Base** | Bedrock KB + RAG | Mock data storage | 86 records across 5 categories |
 | **Memory** | AgentCore Memory | Conversation state | Persistent context across interactions |
-| **Code Deployment** | S3 Direct Deploy | Agent code storage | No Docker/ECS, direct S3 to AgentCore |
+| **Code Deployment** | S3 Direct Deploy | Agent code storage | Direct S3 to AgentCore |
 | **Vector Store** | OpenSearch Serverless | Semantic search | Embeddings for KB retrieval |
 | **Data Storage** | S3 Buckets | Raw data files | JSON/TXT format, versioned |
 
@@ -532,43 +526,6 @@ graph LR
 5. **Observability** - Real-time monitoring and logging
 6. **Resilience** - Graceful degradation and error handling
 
-### 🚀 Deployment Options
-
-```mermaid
-graph TB
-    subgraph "Development"
-        DEV1[Local Machine]
-        DEV2[Mock Mode Testing]
-        DEV3[Strands SDK Local]
-    end
-    
-    subgraph "Staging"
-        STAGE1[AWS Dev Environment]
-        STAGE2[Bedrock API Integration]
-        STAGE3[Knowledge Base Setup]
-    end
-    
-    subgraph "Production"
-        PROD1[AgentCore Runtime]
-        PROD2[Load Balancing]
-        PROD3[CloudWatch Monitoring]
-        PROD4[Auto-scaling]
-    end
-    
-    DEV1 --> STAGE1
-    DEV2 --> STAGE2
-    DEV3 --> STAGE3
-    
-    STAGE1 --> PROD1
-    STAGE2 --> PROD2
-    STAGE3 --> PROD3
-    
-    style PROD1 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style PROD2 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style PROD3 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-    style PROD4 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
-```
-
 ---
 
 ## Conclusion
@@ -596,7 +553,7 @@ graph TB
 ---
 
 **Built for:** AWS Bedrock Agentic AI Hackathon  
-**Team:** iLogistics  
+**Team:** ERL  
 **Date:** February 2026  
 **Tech Stack:** React + FastAPI + AWS Bedrock + Strands SDK  
 **Deployment:** AgentCore Runtime with comprehensive testing
