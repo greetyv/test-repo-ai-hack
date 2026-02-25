@@ -1,4 +1,4 @@
-# iLogistics Agentic AI - Design & Architecture Documentation
+# Cargo Opportunity Allocation - Design & Architecture Documentation
 
 > **Hackathon Presentation: Analysis and Design [Tech and Product Evaluation] - 35%**
 
@@ -10,8 +10,7 @@
 3. [Multi-Agent Architecture](#multi-agent-architecture)
 4. [Data Flow & Orchestration](#data-flow--orchestration)
 5. [Technical Stack](#technical-stack)
-6. [Knowledge Base Architecture](#knowledge-base-architecture)
-7. [Product Features & Value Proposition](#product-features--value-proposition)
+6. [Product Features & Value Proposition](#product-features--value-proposition)
 
 ---
 
@@ -35,126 +34,72 @@ Multi-agent AI system powered by **AWS Bedrock** that intelligently analyzes fli
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
-        UI[React + TypeScript UI]
-        CHAT[Chat Interface]
-        DASH[Analytics Dashboard]
-        AGENTS_UI[Agent Monitoring Panel]
+    USER[👤 Capacity Controller]
+    
+    subgraph "Frontend - Local Development"
+        UI[💻 React + TypeScript UI<br/>Chat Interface + Analytics Dashboard]
     end
     
-    subgraph "API Gateway Layer"
-        API[FastAPI Server]
-        REST[REST Endpoints]
-        SSE[SSE Streaming]
+    subgraph "API Layer"
+        API[🔌 FastAPI Server<br/>REST + SSE Streaming]
     end
     
-    subgraph "Agent Orchestration Layer - AWS Bedrock"
-        COORD[Coordinator Agent<br/>Primary Orchestrator]
+    subgraph "AWS Bedrock AgentCore Runtime"
+        COORD[🎯 Coordinator Agent]
         
-        subgraph "Specialist Agents"
-            OFI[Opportunity Flight<br/>Finder Agent]
-            BPE[Backlog<br/>Prioritizer Agent]
-            REV[Revenue<br/>Estimator Agent]
-            BCO[Binding Condition<br/>Generator Agent]
-        end
+        OFI[🛫 Flight Finder]
+        BPE[📊 Backlog Prioritizer]
+        REV[💰 Revenue Estimator]
+        BCO[📋 Binding Generator]
         
-        COORD --> OFI
-        COORD --> BPE
-        COORD --> REV
-        COORD --> BCO
+        MEMORY[🧠 AgentCore Memory]
     end
     
-    subgraph "Tools & Actions Layer"
-        subgraph "Flight Tools"
-            FT1[get_opportunity_flights]
-            FT2[calculate_load_factor]
-        end
-        
-        subgraph "Backlog Tools"
-            BT1[get_backlog_shipments]
-            BT2[calculate_criticality]
-            BT3[rank_shipments]
-        end
-        
-        subgraph "Revenue Tools"
-            RT1[calculate_revenue_impact]
-            RT2[estimate_load_factor]
-            RT3[compare_scenarios]
-        end
-        
-        subgraph "Binding Tools"
-            BCT1[generate_binding_conditions]
-            BCT2[validate_conditions]
-            BCT3[get_rate_band]
-        end
+    subgraph "Tools & Knowledge Base"
+        TOOLS[🔧 9 Tool Functions<br/>Flight • Backlog • Revenue • Binding]
+        KB[📚 Bedrock Knowledge Base<br/>86 Records • RAG • Semantic Search]
     end
     
-    subgraph "Knowledge Base Layer"
-        KB[(AWS Bedrock<br/>Knowledge Base)]
-        
-        subgraph "Data Sources - 86 Records"
-            KB1[8 Opportunity Flights]
-            KB2[19 Backlog Shipments]
-            KB3[13 Customers]
-            KB4[18 Binding Templates]
-            KB5[28 Revenue Models]
-        end
-        
-        KB --> KB1
-        KB --> KB2
-        KB --> KB3
-        KB --> KB4
-        KB --> KB5
+    subgraph "AI Foundation"
+        CLAUDE[🧠 Claude 3.5 Sonnet<br/>200K Context • Function Calling]
     end
     
-    subgraph "AWS Bedrock Services"
-        BEDROCK[Bedrock Foundation Models]
-        AGENTCORE[AgentCore Runtime]
-        STRANDS[Strands SDK]
-    end
-    
+    USER --> UI
     UI --> API
-    CHAT --> API
-    DASH --> API
-    AGENTS_UI --> API
-    
     API --> COORD
     
-    OFI --> FT1
-    OFI --> FT2
-    BPE --> BT1
-    BPE --> BT2
-    BPE --> BT3
-    REV --> RT1
-    REV --> RT2
-    REV --> RT3
-    BCO --> BCT1
-    BCO --> BCT2
-    BCO --> BCT3
+    COORD --> OFI
+    COORD --> BPE
+    COORD --> REV
+    COORD --> BCO
     
-    FT1 --> KB
-    FT2 --> KB
-    BT1 --> KB
-    BT2 --> KB
-    BT3 --> KB
-    RT1 --> KB
-    RT2 --> KB
-    RT3 --> KB
-    BCT1 --> KB
-    BCT2 --> KB
-    BCT3 --> KB
+    COORD <--> MEMORY
     
-    COORD -.powered by.-> BEDROCK
-    COORD -.deployed on.-> AGENTCORE
-    COORD -.built with.-> STRANDS
+    OFI --> TOOLS
+    BPE --> TOOLS
+    REV --> TOOLS
+    BCO --> TOOLS
     
+    TOOLS --> KB
+    
+    COORD --> CLAUDE
+    OFI --> CLAUDE
+    BPE --> CLAUDE
+    REV --> CLAUDE
+    BCO --> CLAUDE
+    
+    style USER fill:#95E1D3,stroke:#38A169,stroke-width:2px
+    style UI fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style API fill:#B3E5FC,stroke:#03A9F4,stroke-width:2px
     style COORD fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff
     style OFI fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
     style BPE fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
     style REV fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
     style BCO fill:#4ECDC4,stroke:#0A9396,stroke-width:2px
+    style MEMORY fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    style TOOLS fill:#FFE66D,stroke:#F59E0B,stroke-width:2px
     style KB fill:#FFA500,stroke:#FF8C00,stroke-width:2px
-    style BEDROCK fill:#FF9F1C,stroke:#E07A00,stroke-width:2px
+    style CLAUDE fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -462,112 +407,11 @@ sequenceDiagram
 
 ---
 
-## Knowledge Base Architecture
-
-```mermaid
-graph TB
-    subgraph "Knowledge Base - 86 Records"
-        KB_MAIN[AWS Bedrock Knowledge Base<br/>with Semantic Search]
-        
-        subgraph "Flight Data - 8 Records"
-            KB_F1[Opportunity Flights]
-            KB_F2[Spot Rate Approvals]
-            KB_F3[Route Information]
-            KB_F4[Load Factor Data]
-        end
-        
-        subgraph "Shipment Data - 19 Records"
-            KB_S1[Backlog AWBs]
-            KB_S2[Weight/Volume Info]
-            KB_S3[Origin/Destination]
-            KB_S4[SLA Deadlines]
-        end
-        
-        subgraph "Customer Data - 13 Records"
-            KB_C1[Customer Profiles]
-            KB_C2[Tier Rankings]
-            KB_C3[Criticality Scores]
-            KB_C4[Historical Patterns]
-        end
-        
-        subgraph "Binding Templates - 18 Records"
-            KB_B1[Condition Templates]
-            KB_B2[Validity Rules]
-            KB_B3[Weight Constraints]
-            KB_B4[Rate Band Rules]
-        end
-        
-        subgraph "Revenue Models - 28 Records"
-            KB_R1[Pricing Formulas]
-            KB_R2[Revenue Calculations]
-            KB_R3[Historical Outcomes]
-            KB_R4[Optimization Models]
-        end
-    end
-    
-    KB_MAIN --> KB_F1
-    KB_MAIN --> KB_F2
-    KB_MAIN --> KB_F3
-    KB_MAIN --> KB_F4
-    
-    KB_MAIN --> KB_S1
-    KB_MAIN --> KB_S2
-    KB_MAIN --> KB_S3
-    KB_MAIN --> KB_S4
-    
-    KB_MAIN --> KB_C1
-    KB_MAIN --> KB_C2
-    KB_MAIN --> KB_C3
-    KB_MAIN --> KB_C4
-    
-    KB_MAIN --> KB_B1
-    KB_MAIN --> KB_B2
-    KB_MAIN --> KB_B3
-    KB_MAIN --> KB_B4
-    
-    KB_MAIN --> KB_R1
-    KB_MAIN --> KB_R2
-    KB_MAIN --> KB_R3
-    KB_MAIN --> KB_R4
-    
-    subgraph "Hallucination Prevention"
-        HP1[Structured Data Format]
-        HP2[Explicit Constraints]
-        HP3[Validation Rules]
-        HP4[Source Attribution]
-    end
-    
-    KB_MAIN -.implements.-> HP1
-    KB_MAIN -.implements.-> HP2
-    KB_MAIN -.implements.-> HP3
-    KB_MAIN -.implements.-> HP4
-    
-    style KB_MAIN fill:#FFA500,stroke:#FF8C00,stroke-width:3px
-    style KB_F1 fill:#4ECDC4,stroke:#0A9396,stroke-width:1px
-    style KB_S1 fill:#4ECDC4,stroke:#0A9396,stroke-width:1px
-    style KB_C1 fill:#4ECDC4,stroke:#0A9396,stroke-width:1px
-    style KB_B1 fill:#4ECDC4,stroke:#0A9396,stroke-width:1px
-    style KB_R1 fill:#4ECDC4,stroke:#0A9396,stroke-width:1px
-```
-
-### Knowledge Base Strategy
-
-**Approach:** Structured, domain-specific knowledge base with explicit constraints to minimize hallucination
-
-**Key Features:**
-- ✅ 86 carefully curated records covering all scenarios
-- ✅ Explicit data schemas with validation rules
-- ✅ Happy path, negative cases, and edge cases included
-- ✅ Semantic search with source attribution
-- ✅ Structured JSON format for tool consumption
-
----
-
 ## Product Features & Value Proposition
 
 ```mermaid
 mindmap
-  root((iLogistics<br/>Agentic AI))
+  root((Cargo Opportunity<br/>Allocation))
     **Core Features**
       Intelligent Flight Finder
         Low-demand detection
@@ -619,7 +463,7 @@ mindmap
 
 ### Key Differentiators
 
-| Feature | Traditional Approach | iLogistics Agentic AI |
+| Feature | Traditional Approach | Cargo Opportunity Allocation |
 |---------|---------------------|----------------------|
 | **Decision Time** | Hours of manual analysis | 30-60 seconds automated |
 | **Optimization** | Single-factor consideration | Multi-agent collaborative analysis |
